@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from app.models.automation import ScrapeRequest, AutomationRequest
 from app.services.scraper import scrape_google_maps
-from app.database import get_all_leads
+from app.db import get_all_leads
 import csv
 import os
 import uuid

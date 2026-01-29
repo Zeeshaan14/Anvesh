@@ -1,6 +1,6 @@
 from playwright.sync_api import sync_playwright
 import time
-from app.database import insert_lead
+from app.db import insert_lead
 
 def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signal=None):
     """
@@ -159,6 +159,64 @@ def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signa
                                 if any(c.isdigit() for c in line) and len(line) > 8 and ("+" in line or "-" in line):
                                     phone = line
                                     break
+                        # --- 5. NEW: Reviews & Rating ---
+                        rating = "N/A"
+                        reviews = 0
+                        
+                        # Google often puts this in a single div with aria-label="4.7 stars, 15 reviews"
+                        # We look for the element containing the stars
+                        stars_el = page.query_selector('div[role="img"][aria-label*="stars"]')
+                        
+                        if stars_el:
+                            aria_text = stars_el.get_attribute("aria-label") # "4.7 stars, 15 reviews"
+                            if aria_text:
+                                parts = aria_text.split(',')
+                                if len(parts) >= 2:
+                                    rating = parts[0].replace("stars", "").strip()
+                                    # Extract number from "15 reviews"
+                                    reviews_text = parts[1].replace("reviews", "").strip()
+                                    # Handle "1.2K" or simple numbers
+                                    try:
+                                        reviews = int(reviews_text.replace("(", "").replace(")", "").replace(",", ""))
+                                    except:
+                                        reviews = reviews_text # Keep as string if parsing fails
+                        
+                        # --- 6. NEW: "Claim this Business" Status ---
+                        # If this link exists, the profile is UNCLAIMED (High Value Lead)
+                        is_claimed = True
+                        # Look for the specific "Claim this business" text or link
+                        claim_btn = page.query_selector('a[aria-label*="Claim this business"]')
+                        if not claim_btn:
+                            claim_btn = page.locator("text=Claim this business").count() > 0
+                            if claim_btn: is_claimed = False # Button exists, so it's NOT claimed
+                        else:
+                            is_claimed = False # Button found
+
+                        # --- 7. NEW: Business Category ---
+                        # Usually appears right under the title, e.g., "Interior Designer"
+                        category = "N/A"
+                        # It's usually the button with the specific class for category
+                        cat_btn = page.query_selector('button[jsaction*="category"]')
+                        if cat_btn:
+                            category = cat_btn.inner_text()
+
+                        # -----------------------------------
+
+                        print(f"      ✅ Found: {name} | ⭐ {rating} ({reviews}) | Claimed: {is_claimed}")
+
+                        results.append({
+                            "business_name": name,
+                            "industry": industry,
+                            "category": category,      # NEW
+                            "location": location,
+                            "address": address,
+                            "rating": rating,          # NEW
+                            "review_count": reviews,   # NEW
+                            "is_claimed": is_claimed,  # NEW
+                            "has_website": has_website,
+                            "website_url": website_url,
+                            "phone": phone
+                        })
 
                         lead_data = {
                             "business_name": name,
@@ -167,7 +225,11 @@ def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signa
                             "address": address,
                             "has_website": has_website,
                             "website_url": website_url,
-                            "phone": phone
+                            "phone": phone,
+                            "rating": rating,          # NEW
+                            "review_count": reviews,   # NEW
+                            "is_claimed": is_claimed,  # NEW
+                            "category": category       # NEW
                         }
                         
                         # --- INSERT TO DB ---

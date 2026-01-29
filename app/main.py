@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routers import automation
-from app.database import init_db
+from app.db import init_db
 
 app = FastAPI()
 

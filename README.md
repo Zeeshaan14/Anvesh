@@ -43,7 +43,7 @@ uv run uvicorn app.main:app --reload
 
 
 
-You can run the entire stack (FastAPI + MySQL) locally using Docker. This ensures all dependencies, including Playwright browsers and the database, are correctly set up.
+You can run the entire stack (FastAPI + PostgreSQL) locally using Docker. This ensures all dependencies, including Playwright browsers and the database, are correctly set up.
 
 
 
@@ -55,7 +55,7 @@ You can run the entire stack (FastAPI + MySQL) locally using Docker. This ensure
 
     ```
 
-    *Note: This will start a MySQL container and the FastAPI application. The first run might take a few minutes to download images and install browsers.*
+    *Note: This will start a PostgreSQL container and the FastAPI application. The first run might take a few minutes to download images and install browsers.*
 
 
 
@@ -63,4 +63,6 @@ You can run the entire stack (FastAPI + MySQL) locally using Docker. This ensure
 
     The API will be available at [http://localhost:8000](http://localhost:8000).
 
-    The MySQL database is automatically initialized.
+    The PostgreSQL database is automatically initialized.
+
+
