@@ -3,14 +3,14 @@ import os
 from typing import List, Dict, Optional
 from mysql.connector import Error
 
-# Database Configuration for XAMPP
-# You can change these values here or move them to an .env file later
+# Database Configuration
+# Using environment variables for Docker compatibility, with XAMPP defaults as fallback
 DB_CONFIG = {
-    "user": "root",        # Default XAMPP user
-    "password": "",        # Default XAMPP password is empty
-    "host": "localhost",
-    "port": 3306,
-    "database": "leadly"
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", 3306)),
+    "database": os.getenv("DB_NAME", "leadly")
 }
 
 def get_connection():
@@ -19,45 +19,55 @@ def get_connection():
 
 def init_db():
     """Initialize the MySQL database and the leads table."""
-    try:
-        # 1. Connect without a database to create it if it doesn't exist
-        conn = mysql.connector.connect(
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
-            host=DB_CONFIG["host"],
-            port=DB_CONFIG["port"]
-        )
-        cursor = conn.cursor()
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        # 2. Connect to the specific database to create the table
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        # MySQL requires lengths for TEXT/VARCHAR columns in UNIQUE constraints
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS leads (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                business_name VARCHAR(255),
-                industry VARCHAR(255),
-                location VARCHAR(255),
-                address VARCHAR(500),
-                has_website BOOLEAN,
-                website_url TEXT,
-                phone VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_lead (business_name, address(255))
+    import time
+    max_retries = 5
+    retry_delay = 5
+    
+    for attempt in range(max_retries):
+        try:
+            # 1. Connect without a database to create it if it doesn't exist
+            conn = mysql.connector.connect(
+                user=DB_CONFIG["user"],
+                password=DB_CONFIG["password"],
+                host=DB_CONFIG["host"],
+                port=DB_CONFIG["port"]
             )
-        ''')
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("✅ MySQL Database & Table initialized.")
-    except Error as e:
-        print(f"❌ MySQL Init Error: {e}")
+            cursor = conn.cursor()
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            # 2. Connect to the specific database to create the table
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # MySQL requires lengths for TEXT/VARCHAR columns in UNIQUE constraints
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS leads (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    business_name VARCHAR(255),
+                    industry VARCHAR(255),
+                    location VARCHAR(255),
+                    address VARCHAR(500),
+                    has_website BOOLEAN,
+                    website_url TEXT,
+                    phone VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY unique_lead (business_name, address(255))
+                )
+            ''')
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("✅ MySQL Database & Table initialized.")
+            break
+        except Error as e:
+            if attempt < max_retries - 1:
+                print(f"⚠️ Database not ready (attempt {attempt + 1}/{max_retries}). Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                print(f"❌ MySQL Init Error: {e}")
 
 def insert_lead(lead: Dict):
     """Insert a lead into MySQL. Returns True if added, False if duplicate."""

@@ -35,4 +35,32 @@ This project is a **FastAPI-based automation engine** that acts as a virtual res
 
 This project uses **uv** for blazing fast dependency management.
 
-```uv run uvicorn app.main:app --reload```
+```bash
+uv run uvicorn app.main:app --reload
+```
+
+## 🐳 Docker Setup
+
+
+
+You can run the entire stack (FastAPI + MySQL) locally using Docker. This ensures all dependencies, including Playwright browsers and the database, are correctly set up.
+
+
+
+1.  **Build and Run**
+
+    ```bash
+
+    docker compose up --build
+
+    ```
+
+    *Note: This will start a MySQL container and the FastAPI application. The first run might take a few minutes to download images and install browsers.*
+
+
+
+2.  **Access the API**
+
+    The API will be available at [http://localhost:8000](http://localhost:8000).
+
+    The MySQL database is automatically initialized.
