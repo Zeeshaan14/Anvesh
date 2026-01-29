@@ -178,8 +178,8 @@ def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signa
                         # Look for reviews element separately
                         reviews_el = page.query_selector('[aria-label*="reviews"]')
                         if reviews_el:
-                             aria_text = reviews_el.get_attribute("aria-label") # e.g., "17 reviews"
-                             if aria_text:
+                            aria_text = reviews_el.get_attribute("aria-label") # e.g., "17 reviews"
+                            if aria_text:
                                 try:
                                     reviews_str = aria_text.split(" ")[0].replace(",", "")
                                     # Handle suffixes like K for thousands, M for millions
