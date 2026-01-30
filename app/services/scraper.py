@@ -411,7 +411,7 @@ def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signa
                         # --- NEW: Close the pop-up if it was used ---
                         if panel != page: # Only close if we used the pop-up panel
                             try:
-                                close_button = panel.query_selector('button[aria-label="Close"]')
+                                close_button = page.query_selector('button[aria-label="Close"]')
                                 if close_button:
                                     close_button.click()
                                     page.wait_for_timeout(500) # Give it a moment to close
