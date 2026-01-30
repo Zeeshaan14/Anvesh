@@ -36,12 +36,15 @@ jobs:
       
       - name: Set up Python
         run: uv python install 3.12
+        working-directory: ./automation-server
       
       - name: Install dependencies
         run: uv sync
+        working-directory: ./automation-server
       
       - name: Install Playwright browsers
         run: uv run playwright install chromium
+        working-directory: ./automation-server
       
       - name: Run tests
         env:
@@ -52,6 +55,7 @@ jobs:
           DB_NAME: lead_scraper_test
           ADMIN_SECRET: test-admin-secret
         run: uv run pytest -v --tb=short
+        working-directory: ./automation-server
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -59,5 +63,5 @@ jobs:
         with:
           name: test-results
           path: |
-            .pytest_cache/
-            test-results/
+            automation-server/.pytest_cache/
+            automation-server/test-results/

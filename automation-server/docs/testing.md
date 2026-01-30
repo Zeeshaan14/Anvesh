@@ -5,6 +5,9 @@ Anvesh uses **pytest** for testing with a mix of unit and integration tests.
 ## Running Tests
 
 ```bash
+# Navigate to the server directory first
+cd automation-server
+
 # Run all tests
 uv run pytest
 
