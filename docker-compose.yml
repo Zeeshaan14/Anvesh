@@ -11,14 +11,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  anvesh:
-    build: .
+  automation-server:
+    build: 
+      context: ./automation-server
+      dockerfile: Dockerfile
     depends_on:
       - db
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./automation-server:/app
       - /app/.venv
     environment:
       - PYTHONUNBUFFERED=1
