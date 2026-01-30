@@ -260,13 +260,28 @@ def scrape_google_maps(industry: str, location: str, total: int = -1, stop_signa
                         
                         # Fallback: if popup not found, check if main panel updated
                         if not panel:
-                             main_h1 = page.query_selector('h1.DUwDvf')
-                             if main_h1 and expected_name in main_h1.inner_text():
-                                 print("      ... Using main page as panel.")
-                                 panel = page
-                             else:
-                                 print(f"      ⚠️ Panel not found for '{expected_name}' after wait. Skipping.")
-                                 continue
+                            main_h1 = page.query_selector('h1.DUwDvf')
+                            if main_h1 and expected_name:
+                                main_h1_text = main_h1.inner_text() or ""
+                                # Normalize both strings similarly to the fuzzy match logic above
+                                def _normalize_name(text: str) -> str:
+                                    return (
+                                        text.replace("’", "'")
+                                            .replace(".", "")
+                                            .strip()
+                                            .lower()
+                                    )
+                                normalized_expected = _normalize_name(expected_name)
+                                normalized_main = _normalize_name(main_h1_text)
+                                if normalized_expected and normalized_expected in normalized_main:
+                                    print("      ... Using main page as panel.")
+                                    panel = page
+                                else:
+                                    print(f"      ⚠️ Panel not found for '{expected_name}' after wait. Skipping.")
+                                    continue
+                            else:
+                                print(f"      ⚠️ Panel not found for '{expected_name}' after wait. Skipping.")
+                                continue
                         
                         # --- SCRAPE DETAILS (Name is already found above) ---
                         # We use 'name' from the sync block above.
